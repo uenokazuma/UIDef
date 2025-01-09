@@ -98,9 +98,16 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
+   int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+   int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+   int windowWidth = 800;
+   int windowHeight = 600;
+
+   int xpos = (screenWidth - windowWidth) / 2;
+   int ypos = (screenHeight - windowHeight) / 2;
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      xpos, ypos, windowWidth, windowHeight, nullptr, nullptr, hInstance, nullptr);
 
    FormView::show(hInstance, hWnd);
    //HWND hWndMain = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_FORMVIEW), hWnd, (DLGPROC)MainProc);
@@ -115,18 +122,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    return TRUE;
 }
-
-//LRESULT CALLBACK MainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-//    switch (message) {
-//    case WM_INITDIALOG:
-//        char text[15] = "C++ version : ";
-//        wchar_t* wtext = new wchar_t[sizeof(text)];
-//        MultiByteToWideChar(CP_ACP, 0, text, -1, wtext, sizeof(text));
-//        SetDlgItemText(hWnd, IDC_STATIC, wtext);
-//    }
-//
-//    return 0;
-//}
 
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
