@@ -8,7 +8,7 @@ std::wstring getCurrentUser() {
     }
 }
 
-bool SetFolderPermissions(const std::string& path) {
+bool setFolderPermissions(const std::string& path) {
 
     PSECURITY_DESCRIPTOR pSD = NULL;
     PACL pOldDACL = NULL;
@@ -82,6 +82,15 @@ bool SetFolderPermissions(const std::string& path) {
     return true;
 }
 
+std::string toHexString(const unsigned char* hash, size_t hashLength) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < hashLength; i++) {
+        oss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+    }
+
+    return oss.str();
+}
+
 bool File::checkPath(const std::string& path) {
     DWORD dwAttribute = GetFileAttributesA(path.c_str());
     if (dwAttribute == INVALID_FILE_ATTRIBUTES) {
@@ -97,7 +106,7 @@ bool File::checkPath(const std::string& path) {
 bool File::createDir(const std::string& path) {
 
     if (SHCreateDirectoryExA(NULL, path.c_str(), NULL) == ERROR_SUCCESS) {
-        if (SetFolderPermissions(path)) {
+        if (setFolderPermissions(path)) {
             return true;
         }
     }
@@ -128,6 +137,56 @@ void File::scan(const std::filesystem::path& path, std::vector<std::filesystem::
         }
     }
     catch (const std::exception& e) {
-        //show e.what()
+        std::cerr << e.what() << std::endl;
     }
+}
+
+std::string File::hash(const std::string& fileName, File::HashType type) {
+    
+    std::ifstream file(fileName, std::ios::binary);
+    if (!file.is_open()) {
+        return "";
+    }
+    
+    const size_t hashFileSize = 1024 * 16;
+    char hashFile[hashFileSize];
+
+    unsigned char hash[EVP_MAX_MD_SIZE];
+    unsigned int hashLength = 0;
+
+    EVP_MD_CTX* mdContext = EVP_MD_CTX_new();
+    if (mdContext == NULL) {
+        return "";
+    }
+
+    const EVP_MD* md = NULL;
+
+    switch (type) {
+    case File::HashType::MD5:
+        md = EVP_md5();
+        break;
+    case File::HashType::SHA1:
+        md = EVP_sha1();
+        break;
+    case File::HashType::SHA256:
+        md = EVP_sha256();
+        break;
+    }
+
+    if (!EVP_DigestInit_ex(mdContext, md, NULL)) {
+        EVP_MD_CTX_free(mdContext);
+        return "";
+    }
+
+    while (file.read(hashFile, hashFileSize)) {
+        EVP_DigestUpdate(mdContext, hashFile, file.gcount());
+    }
+
+    EVP_DigestUpdate(mdContext, hashFile, file.gcount());
+    
+    if (EVP_DigestFinal_ex(mdContext, hash, &hashLength) != 1) {
+        EVP_MD_CTX_free(mdContext);
+    }
+
+    return toHexString(hash, hashLength);
 }

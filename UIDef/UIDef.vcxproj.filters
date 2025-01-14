@@ -42,6 +42,12 @@
     <ClInclude Include="Connection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="File.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Convert.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="UIDef.cpp">
@@ -59,6 +65,12 @@
     <ClCompile Include="Connection.cpp">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="File.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Convert.cpp">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UIDef.rc">
@@ -72,5 +84,8 @@
     <Image Include="UIDef.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

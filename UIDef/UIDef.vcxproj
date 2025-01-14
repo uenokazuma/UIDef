@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Firebird-5.0.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Firebird-5.0.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files %28x86%29\OpenSSL\include;C:\Firebird-5.0.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -113,10 +113,12 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>fbclient_ms.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -134,10 +136,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>fbclient_ms.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Connection.h" />
+    <ClInclude Include="Convert.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="FormView.h" />
     <ClInclude Include="framework.h" />
@@ -149,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Connection.cpp" />
+    <ClCompile Include="Convert.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="FormView.cpp" />
     <ClCompile Include="Log.cpp" />
@@ -162,7 +167,17 @@
     <Image Include="small.ico" />
     <Image Include="UIDef.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\nlohmann.json.3.11.2\build\native\nlohmann.json.targets" Condition="Exists('..\packages\nlohmann.json.3.11.2\build\native\nlohmann.json.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\nlohmann.json.3.11.2\build\native\nlohmann.json.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\nlohmann.json.3.11.2\build\native\nlohmann.json.targets'))" />
+  </Target>
 </Project>
