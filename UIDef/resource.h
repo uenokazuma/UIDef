@@ -18,8 +18,12 @@
 #define IDC_MFCBUTTON1                  1001
 #define IDC_LIST_SCAN                   1005
 #define IDC_BTN_BROWSE                  1006
-#define IDC_EDIT1                       1007
 #define IDC_EDIT_PATH                   1007
+#define IDC_BUTTON1                     1010
+#define IDC_COMBO1                      1011
+#define IDC_LIST1                       1012
+#define IDC_LIST_FILE                   1012
+#define IDC_CONNECT                     1013
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -29,7 +33,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1008
+#define _APS_NEXT_CONTROL_VALUE         1014
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
