@@ -14,6 +14,7 @@ class File {
 public:
     enum HashType { MD5, SHA1, SHA256 };
     static bool checkPath(const std::string& path);
+    static std::string getPathDir();
     static bool createDir(const std::string& path);
     static void scan(const std::filesystem::path& path, std::vector<std::filesystem::path>& file);
     static std::string hash(const std::string& fileName, File::HashType type);

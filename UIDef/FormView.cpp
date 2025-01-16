@@ -74,8 +74,21 @@ void hashSignature(HWND hWnd, HWND hWndList) {
     else {
         SetDlgItemText(hWnd, IDC_CONNECT, L"not connected");
     }
+}
 
+void yaraRules(HWND hWnd, HWND hWndList) {
 
+    int listCount = ListView_GetItemCount(hWndList);
+    for (int i = 0; i < listCount; i++) {
+        wchar_t filePath[2048];
+        ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
+        std::string file = Convert::WCharToStr(filePath);
+
+        std::string responseYara = YaraRules::scan(file);
+        std::wstring resultHash = Convert::StrToWstr(responseYara);
+
+        ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
+    }
 }
 
 void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
@@ -101,6 +114,10 @@ void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
 
     std::thread threadHashSignature(hashSignature, hWnd, hWndList);
     threadHashSignature.detach();
+
+    //yaraRules(hWnd, hWndList);
+    std::thread threadYara(yaraRules, hWnd, hWndList);
+    threadYara.detach();
 }
 
 void buttonBrowse(HWND hWnd) {

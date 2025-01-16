@@ -2,10 +2,13 @@
 
 std::wstring getCurrentUser() {
     char username[256];
+    std::wstring wstr;
     DWORD username_len = sizeof(username);
     if (GetUserNameA(username, &username_len)) {
-        return std::wstring(username, username + username_len - 1);
+        wstr = std::wstring(username, username + username_len - 1);
     }
+
+    return wstr;
 }
 
 bool setFolderPermissions(const std::string& path) {
@@ -101,6 +104,16 @@ bool File::checkPath(const std::string& path) {
     }
 
     return false;
+}
+
+std::string File::getPathDir() {
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, sizeof(path));
+    std::string fullpath(path);
+    size_t pos = fullpath.find_last_of("\\/");
+    std::string pathDir = fullpath.substr(0, pos);
+
+    return pathDir;
 }
 
 bool File::createDir(const std::string& path) {
