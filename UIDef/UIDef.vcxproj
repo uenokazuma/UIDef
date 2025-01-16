@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Program Files %28x86%29\OpenSSL\include;C:\Firebird-5.0.1\include;$(IncludePath)</IncludePath>
@@ -113,12 +113,12 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fbclient_ms.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>fbclient_ms.lib;libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -150,6 +150,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="UIDef.h" />
+    <ClInclude Include="YaraRules.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Connection.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Log.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="UIDef.cpp" />
+    <ClCompile Include="YaraRules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="UIDef.rc" />
