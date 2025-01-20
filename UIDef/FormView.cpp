@@ -48,6 +48,11 @@ void hashSignature(HWND hWnd, HWND hWndList) {
             ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
             std::string file = Convert::WCharToStr(filePath);
 
+            std::filesystem::path path = file;
+            if (File::ignoreFile(path.filename().string())) {
+                continue;
+            }
+
             std::string md5 = File::hash(file, File::HashType::MD5);
             std::string sha1 = File::hash(file, File::HashType::SHA1);
             std::string sha256 = File::hash(file, File::HashType::SHA256);
@@ -84,8 +89,33 @@ void yaraRules(HWND hWnd, HWND hWndList) {
         ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
 
+        std::filesystem::path path = file;
+        if (File::ignoreFile(path.filename().string())) {
+            continue;
+        }
+
         std::string responseYara = YaraRules::scan(file);
         std::wstring resultHash = Convert::StrToWstr(responseYara);
+
+        ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
+    }
+}
+
+void visualization(HWND hWnd, HWND hWndList) {
+
+    int listCount = ListView_GetItemCount(hWndList);
+    for (int i = 0; i < listCount; i++) {
+        wchar_t filePath[2048];
+        ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
+        std::string file = Convert::WCharToStr(filePath);
+
+        std::filesystem::path path = file;
+        if (File::ignoreFile(path.filename().string())) {
+            continue;
+        }
+
+        std::string visualization = Visualization::scan(file);
+        std::wstring resultHash = Convert::StrToWstr(visualization);
 
         ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
     }
@@ -112,12 +142,16 @@ void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
         i++;
     }
 
-    std::thread threadHashSignature(hashSignature, hWnd, hWndList);
-    threadHashSignature.detach();
+    //std::thread threadHashSignature(hashSignature, hWnd, hWndList);
+    //threadHashSignature.detach();
 
-    //yaraRules(hWnd, hWndList);
-    std::thread threadYara(yaraRules, hWnd, hWndList);
-    threadYara.detach();
+    ////yaraRules(hWnd, hWndList);
+    //std::thread threadYara(yaraRules, hWnd, hWndList);
+    //threadYara.detach();
+
+    visualization(hWnd, hWndList);
+    //std::thread threadVisual(visualization, hWnd, hWndList);
+    //threadVisual.detach();
 }
 
 void buttonBrowse(HWND hWnd) {

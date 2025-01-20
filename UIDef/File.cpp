@@ -127,6 +127,18 @@ bool File::createDir(const std::string& path) {
     return false;
 }
 
+bool File::ignoreFile(const std::string& filename) {
+    const std::string ignore[] = { "UIDef.exe" };
+
+    for (const std::string ignoreName : ignore) {
+        if (ignoreName == filename) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void File::scan(const std::filesystem::path& path, std::vector<std::filesystem::path>& file) {
 
     try {
