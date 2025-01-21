@@ -7,6 +7,8 @@
 #include "Connection.h"
 //#include "File.h"
 #include "YaraRules.h"
+#include <deque>
+#include <future>
 #include <thread>
 #include <nlohmann/json.hpp>
 

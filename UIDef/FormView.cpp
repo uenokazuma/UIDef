@@ -35,40 +35,76 @@ void viewColumns(HWND hWnd) {
 
 }
 
+void postHashSignature(Connection& connect, std::string *url, HWND hWndList, int rowIndex) {
+    wchar_t filePath[2048];
+    ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
+    std::string file = Convert::WCharToStr(filePath);
+
+    std::string md5 = File::hash(file, File::HashType::MD5);
+    std::string sha1 = File::hash(file, File::HashType::SHA1);
+    std::string sha256 = File::hash(file, File::HashType::SHA256);
+
+    std::vector<std::string> hashes = { md5, sha1, sha256 };
+    nlohmann::json json = {
+        {"hashes", hashes }
+    };
+
+    std::string response = connect.sendPostCurl(*url, json);
+
+    nlohmann::json responseJson = nlohmann::json::parse(response);
+    std::wstring resultHash = L"no";
+    for (const auto& item : responseJson["response"]) {
+        BOOL is_found = item["is_found"];
+        if (is_found) {
+            resultHash = L"yes";
+        }
+    }
+
+    ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(resultHash.c_str()));
+}
+
 void hashSignature(HWND hWnd, HWND hWndList) {
-    
+
     Connection connect;
     if (connect.checkInternetConnection()) {
-        std::string url = "http://10.5.101.199:9000/hash";
+        std::string url = "http://srv513883.hstgr.cloud:9000/hash";
         SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
 
         int listCount = ListView_GetItemCount(hWndList);
-        for (int i = 0; i < listCount; i++) {
-            wchar_t filePath[2048];
-            ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
-            std::string file = Convert::WCharToStr(filePath);
 
-            std::string md5 = File::hash(file, File::HashType::MD5);
-            std::string sha1 = File::hash(file, File::HashType::SHA1);
-            std::string sha256 = File::hash(file, File::HashType::SHA256);
+        const size_t MAX_CONCURRENT_TASKS = 50;
+        
+        std::deque<std::future<void>> futures;
+        int index = 0;
 
-            std::vector<std::string> hashes = { md5, sha1, sha256 };
-            nlohmann::json json = {
-                {"hashes", hashes }
-            };
+        while (index < listCount && futures.size() < MAX_CONCURRENT_TASKS) {
+            futures.push_back(
+                std::async(std::launch::async,
+                    postHashSignature,
+                    std::ref(connect),
+                    &url,
+                    hWndList,
+                    index++
+                )
+            );
+        }
 
-            std::string response = connect.sendPostCurl(url, json);
+        while (!futures.empty()) {
+            auto& first_future = futures.front();
+            first_future.get();
+            futures.pop_front();
 
-            nlohmann::json responseJson = nlohmann::json::parse(response);
-            std::wstring resultHash = L"no";
-            for (const auto& item : responseJson["response"]) {
-                BOOL is_found = item["is_found"];
-                if (is_found) {
-                    resultHash = L"yes";
-                }
+            if (index < listCount) {
+                futures.push_back(
+                    std::async(std::launch::async,
+                        postHashSignature,
+                        std::ref(connect),
+                        &url,
+                        hWndList,
+                        index++
+                    )
+                );
             }
-
-            ListView_SetItemText(hWndList, i, 2, const_cast<LPWSTR>(resultHash.c_str()));
         }
     }
     else {
@@ -76,18 +112,49 @@ void hashSignature(HWND hWnd, HWND hWndList) {
     }
 }
 
+void scanYara(HWND hWndList, int rowIndex) {
+    wchar_t filePath[2048];
+    ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
+    std::string file = Convert::WCharToStr(filePath);
+
+    std::string responseYara = YaraRules::scan(file);
+    std::wstring resultHash = Convert::StrToWstr(responseYara);
+
+    ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(resultHash.c_str()));
+}
+
 void yaraRules(HWND hWnd, HWND hWndList) {
-
     int listCount = ListView_GetItemCount(hWndList);
-    for (int i = 0; i < listCount; i++) {
-        wchar_t filePath[2048];
-        ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
-        std::string file = Convert::WCharToStr(filePath);
 
-        std::string responseYara = YaraRules::scan(file);
-        std::wstring resultHash = Convert::StrToWstr(responseYara);
+    const size_t MAX_CONCURRENT_TASKS = 50;
 
-        ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
+    std::deque<std::future<void>> futures;
+    int index = 0;
+
+    while (index < listCount && futures.size() < MAX_CONCURRENT_TASKS) {
+        futures.push_back(
+            std::async(std::launch::async,
+                scanYara,
+                hWndList,
+                index++
+            )
+        );
+    }
+
+    while (!futures.empty()) {
+        auto& first_future = futures.front();
+        first_future.get();
+        futures.pop_front();
+
+        if (index < listCount) {
+            futures.push_back(
+                std::async(std::launch::async,
+                    scanYara,
+                    hWndList,
+                    index++
+                )
+            );
+        }
     }
 }
 
@@ -165,7 +232,7 @@ LRESULT CALLBACK MainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message) {
     case WM_INITDIALOG:
         if (connect.checkInternetConnection()) {
-            std::string url = "http://10.5.101.199:9000/hash";
+            std::string url = "http://srv513883.hstgr.cloud:9000/hash";
             SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
         }
         else {
