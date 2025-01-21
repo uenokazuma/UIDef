@@ -114,11 +114,13 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(SolutionDir)\External Libraries\yara-4.4.0\include;$(SolutionDir)\External Libraries\openssl\include;$(SolutionDir)\External Libraries\nlohmann-json\include;$(SolutionDir)\External Libraries\curl-8.11.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fbclient_ms.lib;libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\External Libraries\yara-4.4.0\lib;$(SolutionDir)\External Libraries\openssl\lib;$(SolutionDir)\External Libraries\curl-8.11.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -130,13 +132,15 @@
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)\External Libraries\yara-4.4.0\include;$(SolutionDir)\External Libraries\openssl\include;$(SolutionDir)\External Libraries\nlohmann-json\include;$(SolutionDir)\External Libraries\curl-8.11.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fbclient_ms.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcrypto.lib;libssl.lib;libcurl.dll.a;libyara.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\External Libraries\yara-4.4.0\lib;$(SolutionDir)\External Libraries\openssl\lib;$(SolutionDir)\External Libraries\curl-8.11.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
