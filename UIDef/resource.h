@@ -24,6 +24,19 @@
 #define IDC_LIST1                       1012
 #define IDC_LIST_FILE                   1012
 #define IDC_CONNECT                     1013
+#define IDC_SCAN_HASH                   1014
+#define IDC_SCAN_HASH_TRUE              1015
+#define IDC_SCAN_HASH_COUNT             1016
+#define IDC_SCAN_HASH_TRUE_COUNT        1017
+#define IDC_SCAN_YARA                   1018
+#define IDC_SCAN_YARA_TRUE              1019
+#define IDC_SCAN_YARA_COUNT             1020
+#define IDC_SCAN_YARA_TRUE_COUNT        1021
+#define IDC_SCAN_VIS                    1022
+#define IDC_SCAN_VIS_TRUE               1023
+#define IDC_SCAN_VIS_COUNT              1024
+#define IDC_SCAN_HASH_TRUE6             1025
+#define IDC_SCAN_VIS_TRUE_COUNT         1025
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -33,7 +46,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1014
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

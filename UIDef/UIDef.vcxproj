@@ -73,10 +73,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\include\opencv4;D:\AMP\additional\libtensorflow\include;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\lib;D:\AMP\additional\libtensorflow\lib;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PreLinkEventUseInBuild>false</PreLinkEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Program Files %28x86%29\OpenSSL\include;C:\Firebird-5.0.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files %28x86%29\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\include\opencv4;D:\AMP\additional\libtensorflow\include;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\lib;D:\AMP\additional\libtensorflow\lib;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
+    <PreLinkEventUseInBuild>false</PreLinkEventUseInBuild>
+    <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -118,7 +124,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fbclient_ms.lib;libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -136,7 +142,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>fbclient_ms.lib;libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

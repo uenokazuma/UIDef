@@ -17,8 +17,9 @@ bool Connection::checkInternetConnection() {
     server.sin_family = AF_INET;
     server.sin_port = htons(53);
 
-    const char* dns = "8.8.8.8";
-    if (inet_pton(AF_INET, dns, &server.sin_addr) <= 0) {
+    //const char* address = "srv513883.hstgr.cloud";
+    const char* address = "8.8.8.8";
+    if (inet_pton(AF_INET, address, &server.sin_addr) <= 0) {
         closesocket(socketTcp);
         WSACleanup();
         return false;
@@ -49,7 +50,9 @@ std::string Connection::sendPost(std::string url, nlohmann::json body) {
         return "";
     }
 
-    BOOL result = HttpSendRequestA(hConnect, headers, -1, (LPVOID)jsonString.c_str(), jsonString.length());
+    size_t sizeJson = jsonString.length();
+    DWORD dwJson = static_cast<DWORD>(sizeJson);
+    BOOL result = HttpSendRequestA(hConnect, headers, -1, (LPVOID)jsonString.c_str(), dwJson);
     if (!result) {
         InternetCloseHandle(hConnect);
         InternetCloseHandle(hInternet);

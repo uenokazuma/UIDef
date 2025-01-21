@@ -1,7 +1,8 @@
 #pragma once
+#include <windows.h>
+#include <filesystem>
 #include "File.h"
 #include "Convert.h"
-#include <filesystem>
 #include <yara.h>
 
 class YaraRules

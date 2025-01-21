@@ -1,20 +1,5 @@
 #include "Visualization.h"
 
-void checkStatus(TF_Status* status) {
-    if (TF_GetCode(status) != TF_OK) {
-        exit(1);
-    }
-}
-
-TF_Graph* loadGraph(const std::string& modelPath) {
-
-    TF_Status* status = TF_NewStatus();
-    TF_SessionOptions* options = TF_NewSessionOptions();
-    TF_Session* session = NULL;
-
-    TF_SavedModel
-}
-
 std::vector<float> extractBytes(const std::string& filePath, size_t length = 1024) {
     
     std::ifstream file(filePath, std::ios::binary);
@@ -43,6 +28,26 @@ std::vector<float> normalize(const std::vector<float>& data) {
     return normalizedData;
 }
 
+void saveHeatMap(const cv::Mat& heatMap, const std::string& filePath) {
+
+    cv::imwrite(filePath, heatMap);
+
+}
+
+void plotHeatMap(const std::vector<float>& features, const std::string& savePath) {
+    
+    cv::Mat heatMap(32, 32, CV_32F, const_cast<float*>(features.data()));
+
+    cv::normalize(heatMap, heatMap, 0, 255, cv::NORM_MINMAX);
+    cv::Mat coloredHeatMap;
+
+    cv::applyColorMap(heatMap, coloredHeatMap, cv::COLORMAP_VIRIDIS);
+
+    coloredHeatMap.convertTo(heatMap, CV_8U);
+    saveHeatMap(coloredHeatMap, savePath);
+
+}
+
 std::string predict(const std::string& filePath, const std::string& modelPath) {
 
     std::string checkDirectory = File::getPathDir() + "\\data\\visc";
@@ -52,7 +57,9 @@ std::string predict(const std::string& filePath, const std::string& modelPath) {
     std::vector<float> normalizedData = normalize(fileBytes);
     std::string heatMapPath = checkDirectory + "\\ch_heatmap.png";
     
-    cv::Mat img = cv::imread(heatMapPath, cv::IMREAD_GRAYSCALE); 
+    plotHeatMap(normalizedData, heatMapPath);
+
+    cv::Mat img = cv::imread(heatMapPath, cv::COLORMAP_VIRIDIS);
     if (img.empty()) {
         exit(1);
     }
@@ -70,32 +77,17 @@ std::string predict(const std::string& filePath, const std::string& modelPath) {
     return label;
 }
 
-void saveHeatMap(const cv::Mat& heatMap, const std::string& filePath) {
-
-    cv::imwrite(filePath, heatMap);
-
-}
-
-void plotHeatMap(const std::vector<float>& features, const std::string& savePath) {
-    
-    cv::Mat heatMap(32, 32, CV_32F, const_cast<float*>(features.data()));
-
-    cv::normalize(heatMap, heatMap, 0, 255, cv::NORM_MINMAX);
-    heatMap.convertTo(heatMap, CV_8U);
-    saveHeatMap(heatMap, savePath);
-
-}
-
 std::string Visualization::scan(const std::string& filename) {
 
     std::string response = "benign";
     std::string rulesDirectory = File::getPathDir() + "\\data\\vism";
 
-    for (const auto& entry : std::filesystem::directory_iterator(rulesDirectory)) {
-        if (entry.is_regular_file() && entry.path().extension() == ".keras") {
-            response = predict(filename, entry.path().string());
-        }
-    }
+    //for (const auto& entry : std::filesystem::directory_iterator(rulesDirectory)) {
+    //    if (entry.is_regular_file() && entry.path().extension() == ".pb") {
+            //response = predict(filename, entry.path().string());
+            response = predict(filename, rulesDirectory);
+    //    }
+    //}
 
     return response;
 }

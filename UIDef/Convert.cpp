@@ -1,5 +1,11 @@
 #include "Convert.h"
 
+std::wstring Convert::IntToWstr(int number) {
+
+    std::wstring wideStr = std::to_wstring(number);
+
+    return wideStr;
+}
 
 std::wstring Convert::StrToWstr(const std::string str) {
     int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);

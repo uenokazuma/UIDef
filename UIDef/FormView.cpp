@@ -18,7 +18,7 @@ void viewColumns(HWND hWnd) {
     ListView_InsertColumn(hWndList, 0, &lvColumn);
 
     lvColumn.pszText = (WCHAR*)L"File Path";
-    lvColumn.cx = 400;
+    lvColumn.cx = 500;
     ListView_InsertColumn(hWndList, 1, &lvColumn);
 
     lvColumn.pszText = (WCHAR*)L"Hash Signature";
@@ -39,11 +39,17 @@ void hashSignature(HWND hWnd, HWND hWndList) {
     
     Connection connect;
     if (connect.checkInternetConnection()) {
-        std::string url = "http://10.5.101.199:9000/hash";
+        //std::string url = "http://10.5.101.199:9000/hash";
+        std::string url = "http://srv513883.hstgr.cloud:9000/hash";
         SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
 
         int listCount = ListView_GetItemCount(hWndList);
+        int count = 0;
+        int countTrue = 0;
         for (int i = 0; i < listCount; i++) {
+            
+            count++;
+            SetDlgItemText(hWnd, IDC_SCAN_HASH_COUNT, Convert::IntToWstr(count).c_str());
             wchar_t filePath[2048];
             ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
             std::string file = Convert::WCharToStr(filePath);
@@ -68,8 +74,11 @@ void hashSignature(HWND hWnd, HWND hWndList) {
             std::wstring resultHash = L"no";
             for (const auto& item : responseJson["response"]) {
                 BOOL is_found = item["is_found"];
-                if (is_found) {
+                std::string classType = item["class"];
+                if (is_found && (classType == "ransomware" || classType == "malware")) {
                     resultHash = L"yes";
+                    countTrue++;
+                    SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
                 }
             }
 
@@ -84,7 +93,12 @@ void hashSignature(HWND hWnd, HWND hWndList) {
 void yaraRules(HWND hWnd, HWND hWndList) {
 
     int listCount = ListView_GetItemCount(hWndList);
+    int count = 0;
+    int countTrue = 0;
     for (int i = 0; i < listCount; i++) {
+
+        count++;
+        SetDlgItemText(hWnd, IDC_SCAN_YARA_COUNT, Convert::IntToWstr(count).c_str());
         wchar_t filePath[2048];
         ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
@@ -95,6 +109,11 @@ void yaraRules(HWND hWnd, HWND hWndList) {
         }
 
         std::string responseYara = YaraRules::scan(file);
+        if (responseYara == "yes") {
+            countTrue++;
+            SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+        }
+
         std::wstring resultHash = Convert::StrToWstr(responseYara);
 
         ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
@@ -104,7 +123,12 @@ void yaraRules(HWND hWnd, HWND hWndList) {
 void visualization(HWND hWnd, HWND hWndList) {
 
     int listCount = ListView_GetItemCount(hWndList);
+    int count = 0;
+    int countTrue = 0;
     for (int i = 0; i < listCount; i++) {
+
+        count++;
+        SetDlgItemText(hWnd, IDC_SCAN_VIS_COUNT, Convert::IntToWstr(count).c_str());
         wchar_t filePath[2048];
         ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
@@ -115,6 +139,11 @@ void visualization(HWND hWnd, HWND hWndList) {
         }
 
         std::string visualization = Visualization::scan(file);
+        if (visualization != "benign") {
+            countTrue++;
+            SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+        }
+
         std::wstring resultHash = Convert::StrToWstr(visualization);
 
         ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
@@ -142,14 +171,14 @@ void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
         i++;
     }
 
-    //std::thread threadHashSignature(hashSignature, hWnd, hWndList);
-    //threadHashSignature.detach();
+    std::thread threadHashSignature(hashSignature, hWnd, hWndList);
+    threadHashSignature.detach();
 
     ////yaraRules(hWnd, hWndList);
     //std::thread threadYara(yaraRules, hWnd, hWndList);
     //threadYara.detach();
 
-    visualization(hWnd, hWndList);
+    //visualization(hWnd, hWndList);
     //std::thread threadVisual(visualization, hWnd, hWndList);
     //threadVisual.detach();
 }
@@ -208,7 +237,7 @@ LRESULT CALLBACK MainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         viewColumns(hWnd);
         SetDlgItemText(hWnd, IDC_STATIC, L"Ransomware Defender");
-        SetDlgItemText(hWnd, IDC_EDIT_PATH, L"D:\\AMP");
+        SetDlgItemText(hWnd, IDC_EDIT_PATH, L"D:\\AMP\\documents");
         break;
     case WM_COMMAND:
         int wmcID = LOWORD(wParam);
