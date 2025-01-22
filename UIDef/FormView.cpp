@@ -36,7 +36,7 @@ void viewColumns(HWND hWnd) {
 }
 
 void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
-    auto start = std::chrono::high_resolution_clock::now();
+    //auto start = std::chrono::high_resolution_clock::now();
 
     Connection connect;
     if (connect.checkInternetConnection()) {
@@ -134,11 +134,11 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
         SetDlgItemText(hWnd, IDC_CONNECT, L"not connected");
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
+    //auto end = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double> duration = end - start;
-    auto text = std::to_wstring(duration.count()) + L" s";
-    SetDlgItemText(hWnd, IDC_CONNECT, text.c_str());
+    //std::chrono::duration<double> duration = end - start;
+    //auto text = std::to_wstring(duration.count()) + L" s";
+    //SetDlgItemText(hWnd, IDC_CONNECT, text.c_str());
 }
 
 
