@@ -146,7 +146,7 @@ void visualization(HWND hWnd, HWND hWndList) {
 
         std::wstring resultHash = Convert::StrToWstr(visualization);
 
-        ListView_SetItemText(hWndList, i, 3, const_cast<LPWSTR>(resultHash.c_str()));
+        ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(resultHash.c_str()));
     }
 }
 
@@ -171,14 +171,14 @@ void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
         i++;
     }
 
-    std::thread threadHashSignature(hashSignature, hWnd, hWndList);
-    threadHashSignature.detach();
+    //std::thread threadHashSignature(hashSignature, hWnd, hWndList);
+    //threadHashSignature.detach();
 
     ////yaraRules(hWnd, hWndList);
     //std::thread threadYara(yaraRules, hWnd, hWndList);
     //threadYara.detach();
 
-    //visualization(hWnd, hWndList);
+    visualization(hWnd, hWndList);
     //std::thread threadVisual(visualization, hWnd, hWndList);
     //threadVisual.detach();
 }

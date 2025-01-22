@@ -51,30 +51,6 @@
     <ClInclude Include="YaraRules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cppflow\context.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\cppflow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\datatype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\defer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\model.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\ops.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\raw_ops.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="cppflow\tensor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Visualization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -123,8 +99,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="cppflow\LICENSE" />
-    <None Include="cppflow\ops_generator\generator.py" />
-    <None Include="cppflow\ops_generator\ops.pbtxt" />
   </ItemGroup>
 </Project>

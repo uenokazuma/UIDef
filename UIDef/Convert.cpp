@@ -7,6 +7,15 @@ std::wstring Convert::IntToWstr(int number) {
     return wideStr;
 }
 
+LPWSTR Convert::StrToLPWSTR(std::string& str) {
+
+    int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
+    LPWSTR lpwstr = new wchar_t[size];
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, lpwstr, size);
+
+    return lpwstr;
+}
+
 std::wstring Convert::StrToWstr(const std::string str) {
     int size = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
     std::wstring wstr(size, 0);

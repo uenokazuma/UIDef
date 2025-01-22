@@ -71,15 +71,15 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\include\opencv4;D:\AMP\additional\libtensorflow\include;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\lib;D:\AMP\additional\libtensorflow\lib;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;$(LibraryPath)</LibraryPath>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild>false</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\include\opencv4;D:\AMP\additional\libtensorflow\include;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\Firebird-5.0.1\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\opencv4_x64-windows\lib;D:\AMP\additional\libtensorflow\lib;C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;C:\Firebird-5.0.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\include;C:\Program Files\OpenSSL\include;C:\curl-8.11.1_3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\yara-4.5.2\build\vcpkg\packages\yara_x64-windows\lib;C:\curl-8.11.1_3\lib;C:\Program Files\OpenSSL\lib;$(LibraryPath)</LibraryPath>
     <PreBuildEventUseInBuild>false</PreBuildEventUseInBuild>
     <PreLinkEventUseInBuild>false</PreLinkEventUseInBuild>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
@@ -124,7 +124,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,20 +142,12 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;tensorflow.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libyara.lib;libcrypto.lib;libssl.lib;libcurl.dll.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Connection.h" />
     <ClInclude Include="Convert.h" />
-    <ClInclude Include="cppflow\context.h" />
-    <ClInclude Include="cppflow\cppflow.h" />
-    <ClInclude Include="cppflow\datatype.h" />
-    <ClInclude Include="cppflow\defer.h" />
-    <ClInclude Include="cppflow\model.h" />
-    <ClInclude Include="cppflow\ops.h" />
-    <ClInclude Include="cppflow\raw_ops.h" />
-    <ClInclude Include="cppflow\tensor.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="FormView.h" />
     <ClInclude Include="framework.h" />
@@ -186,9 +178,6 @@
     <Image Include="UIDef.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cppflow\LICENSE" />
-    <None Include="cppflow\ops_generator\generator.py" />
-    <None Include="cppflow\ops_generator\ops.pbtxt" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
