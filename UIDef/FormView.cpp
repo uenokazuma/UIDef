@@ -172,8 +172,8 @@ void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesy
         ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
 
-        auto result;
-        if (yara.scan(files->at(rowIndex).string()) {
+        const wchar_t* result;
+        if (yara.scan(files->at(rowIndex).string())) {
             result = L"yes";
             countTrue++;
             SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
@@ -183,7 +183,7 @@ void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesy
         }
 
         ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(result));
-        };
+    };
 
     std::deque<std::future<void>> futures;
     int index = 0;
