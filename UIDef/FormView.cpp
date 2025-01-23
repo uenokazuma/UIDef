@@ -94,7 +94,9 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
                     [&response, hWnd, hWndList, startIndex, &countTrue](size_t index) {
                         bool found = false;
                         for (size_t i = 0; i < 3; i++) {
-                            if (response["response"][index * 3 + i]["is_found"]) {
+                            bool isFound = response["response"][index * 3 + i]["is_found"];
+                            std::string classType = response["response"][index * 3 + i]["class"];
+                            if (isFound && (classType == "ransomware" || classType == "malware")) {
                                 found = true;
                                 countTrue++;
                                 SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());

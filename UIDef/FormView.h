@@ -13,7 +13,7 @@
 #include <thread>
 #include <nlohmann/json.hpp>
 
-#define MAX_CONCURRENT_TASKS 50
+#define MAX_CONCURRENT_TASKS 30
 #define BATCH_SIZE 200
 
 class FormView

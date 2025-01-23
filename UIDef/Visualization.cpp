@@ -29,7 +29,7 @@
 
 std::string Visualization::scan(const std::string& filename) {
 
-    std::string response = "benign";
+    std::string response = "0";
     std::string filepath = File::getPathDir();
     const char* filepathChar = filepath.c_str();
     const char* argImage = "data\\visc";
