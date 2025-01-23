@@ -45,7 +45,7 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 
         auto listCount = files->size();
 
-        auto postHashSignatureBatch = [&connect, url, hWndList, files](size_t startIndex, size_t endIndex) {
+        auto postHashSignatureBatch = [&connect, url, hWndList, &files](size_t startIndex, size_t endIndex) {
             const auto size = endIndex - startIndex;
 
             std::vector<std::string> hashes(size * 3);
@@ -142,18 +142,20 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 }
 
 
-void yaraRules(HWND hWnd, HWND hWndList) {
+void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
     int listCount = ListView_GetItemCount(hWndList);
 
-    auto scanYara = [hWndList](int rowIndex) {
+    auto yara = YaraRules();
+    yara.compileRulesRecursive(File::getPathDir() + "\\data\\yru");
+
+    auto scanYara = [&yara, hWndList, &files](int rowIndex) {
         wchar_t filePath[2048];
         ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
 
-        std::string responseYara = YaraRules::scan(file);
-        std::wstring resultHash = Convert::StrToWstr(responseYara);
+        auto result = yara.scan(files->at(rowIndex).string()) ? L"yes" : L"no";
 
-        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(resultHash.c_str()));
+        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(result));
         };
 
     std::deque<std::future<void>> futures;
@@ -206,7 +208,7 @@ void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::pat
     }
 
     //yaraRules(hWnd, hWndList);
-    std::thread threadYara(yaraRules, hWnd, hWndList);
+    std::thread threadYara(yaraRules, hWnd, hWndList, listFile);
     threadYara.detach();
 
     std::thread threadHashSignature(hashSignature, hWnd, hWndList, listFile);
