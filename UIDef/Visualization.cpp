@@ -60,7 +60,7 @@ std::string Visualization::scan(const std::string& filename) {
 
     std::string commandChar = command;
     LPWSTR commandLpwstr = Convert::StrToLPWSTR(commandChar);
-    if (CreateProcess(NULL, commandLpwstr, NULL, NULL, TRUE, 0, NULL, NULL, &startInfo, &processInfo)) {
+    if (CreateProcess(NULL, commandLpwstr, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &startInfo, &processInfo)) {
         CloseHandle(hStdoutWrite);
 
         char receive[4096];
@@ -79,7 +79,7 @@ std::string Visualization::scan(const std::string& filename) {
             response = match[1];
         }
 
-        WaitForSingleObject(processInfo.hProcess, INFINITE);
+        //WaitForSingleObject(processInfo.hProcess, INFINITE);
 
         CloseHandle(processInfo.hProcess);
         CloseHandle(processInfo.hThread);

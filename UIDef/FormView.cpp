@@ -29,7 +29,7 @@ void viewColumns(HWND hWnd) {
     lvColumn.cx = 100;
     ListView_InsertColumn(hWndList, 3, &lvColumn);
 
-    lvColumn.pszText = (WCHAR*)L"Virtualization";
+    lvColumn.pszText = (WCHAR*)L"Visualization";
     lvColumn.cx = 100;
     ListView_InsertColumn(hWndList, 4, &lvColumn);
 
@@ -139,14 +139,28 @@ void visualization(HWND hWnd, HWND hWndList) {
         }
 
         std::string visualization = Visualization::scan(file);
-        if (visualization != "benign") {
+        float visNum = std::stof(visualization);
+
+        const wchar_t* result;
+        if (visNum > 0.5) {
             countTrue++;
             SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+            result = L"yes";
         }
+        else {
+            result = L"no";
+        }
+        
+        ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(result));
+        
+        //if (visualization != "benign") {
+        //    countTrue++;
+        //    SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+        //}
 
-        std::wstring resultHash = Convert::StrToWstr(visualization);
+        //std::wstring resultHash = Convert::StrToWstr(visualization);
 
-        ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(resultHash.c_str()));
+        //ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(resultHash.c_str()));
     }
 }
 
@@ -156,6 +170,7 @@ void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
     lvItem.mask = LVIF_TEXT;
 
     HWND hWndList = GetDlgItem(hWnd, IDC_LIST_FILE);
+    ListView_DeleteAllItems(hWndList);
      //SendMessageA(hWndList, LB_RESETCONTENT, 0, 0);
      //SendMessageA(hWndList, LB_SETHORIZONTALEXTENT, (WPARAM)1000, 0);
     int i = 0;
@@ -171,16 +186,16 @@ void listScannedFile(HWND hWnd, std::vector<std::filesystem::path> listFile) {
         i++;
     }
 
-    //std::thread threadHashSignature(hashSignature, hWnd, hWndList);
-    //threadHashSignature.detach();
+    std::thread threadHashSignature(hashSignature, hWnd, hWndList);
+    threadHashSignature.detach();
 
     ////yaraRules(hWnd, hWndList);
-    //std::thread threadYara(yaraRules, hWnd, hWndList);
-    //threadYara.detach();
+    std::thread threadYara(yaraRules, hWnd, hWndList);
+    threadYara.detach();
 
-    visualization(hWnd, hWndList);
-    //std::thread threadVisual(visualization, hWnd, hWndList);
-    //threadVisual.detach();
+    //visualization(hWnd, hWndList);
+    std::thread threadVisual(visualization, hWnd, hWndList);
+    threadVisual.detach();
 }
 
 void buttonBrowse(HWND hWnd) {
