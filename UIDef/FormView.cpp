@@ -248,8 +248,13 @@ void buttonScan(HWND hWnd) {
     std::string pathScan(textEditPath);
     auto file = std::make_shared<std::vector<std::filesystem::path>>();
 
-    File::scan(pathScan, *file);
-    listScannedFile(hWnd, file);
+    std::thread scan(
+        [pathScan, hWnd, file] {
+            File::scan(pathScan, *file);
+            listScannedFile(hWnd, file);
+        }
+    );
+    scan.detach();
 }
 
 LRESULT CALLBACK MainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
