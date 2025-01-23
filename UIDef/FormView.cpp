@@ -51,13 +51,8 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
         //for (int i = 0; i < listCount; i++) {
             
 
-        auto postHashSignatureBatch = [&connect, url, hWndList, files](size_t startIndex, size_t endIndex) {
-            count++;
-            SetDlgItemText(hWnd, IDC_SCAN_HASH_COUNT, Convert::IntToWstr(count).c_str());
-            wchar_t filePath[2048];
-            ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
-            std::string file = Convert::WCharToStr(filePath);
-            
+        auto postHashSignatureBatch = [&connect, url, hWnd, hWndList, files, &count, &countTrue](size_t startIndex, size_t endIndex) {
+
             const auto size = endIndex - startIndex;
 
             std::vector<std::string> hashes(size * 3);
@@ -66,6 +61,9 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
             futures.reserve(size);
 
             for (size_t i = 0; i < size; i++) {
+                count++;
+                SetDlgItemText(hWnd, IDC_SCAN_HASH_COUNT, Convert::IntToWstr(count).c_str());
+
                 futures.push_back(std::async(
                     std::launch::async,
                     [&hashes](std::string path, size_t index) {
@@ -77,9 +75,11 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
                     i
                 ));
             }
+
             for (auto& f : futures) {
                 f.get();
             }
+
             futures.clear();
 
             nlohmann::json json = {
@@ -91,11 +91,13 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
             for (size_t i = 0; i < size; i++) {
                 futures.push_back(std::async(
                     std::launch::async,
-                    [&response, hWndList, startIndex](size_t index) {
+                    [&response, hWnd, hWndList, startIndex, &countTrue](size_t index) {
                         bool found = false;
                         for (size_t i = 0; i < 3; i++) {
                             if (response["response"][index * 3 + i]["is_found"]) {
                                 found = true;
+                                countTrue++;
+                                SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
                                 break;
                             }
                         }
@@ -105,6 +107,7 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
                     i
                 ));
             }
+
             for (auto& f : futures) {
                 f.get();
             }
@@ -155,13 +158,12 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 
 
 void yaraRules(HWND hWnd, HWND hWndList) {
-    int listCount = ListView_GetItemCount(hWndList);
 
     int listCount = ListView_GetItemCount(hWndList);
     int count = 0;
     int countTrue = 0;
     //for (int i = 0; i < listCount; i++) {
-    auto scanYara = [hWndList](int rowIndex) {
+    auto scanYara = [hWnd, hWndList, &count, &countTrue](int rowIndex) {
 
         count++;
         SetDlgItemText(hWnd, IDC_SCAN_YARA_COUNT, Convert::IntToWstr(count).c_str());
@@ -171,7 +173,7 @@ void yaraRules(HWND hWnd, HWND hWndList) {
 
         std::filesystem::path path = file;
         if (File::ignoreFile(path.filename().string())) {
-            continue;
+            return;
         }
 
         std::string responseYara = YaraRules::scan(file);
@@ -279,16 +281,12 @@ void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::pat
         i++;
     }
 
-    std::thread threadHashSignature(hashSignature, hWnd, hWndList);
+    std::thread threadHashSignature(hashSignature, hWnd, hWndList, listFile);
     threadHashSignature.detach();
 
     //yaraRules(hWnd, hWndList);
     std::thread threadYara(yaraRules, hWnd, hWndList);
     threadYara.detach();
-
-    std::thread threadHashSignature(hashSignature, hWnd, hWndList, listFile);
-    threadHashSignature.detach();
-
 
     //visualization(hWnd, hWndList);
     std::thread threadVisual(visualization, hWnd, hWndList);
