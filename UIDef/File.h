@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <filesystem>
 #include <fstream>
@@ -16,6 +17,7 @@ public:
     static bool checkPath(const std::string& path);
     static std::string getPathDir();
     static bool createDir(const std::string& path);
+    static bool ignoreFile(const std::string& filename);
     static void scan(const std::filesystem::path& path, std::vector<std::filesystem::path>& file);
     static std::string hash(const std::string& fileName, File::HashType type);
 };
