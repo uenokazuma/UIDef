@@ -100,7 +100,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // Store instance handle in our global variable
    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-   int windowWidth = 800;
+   int windowWidth = 1150;
    int windowHeight = 600;
 
    int xpos = (screenWidth - windowWidth) / 2;

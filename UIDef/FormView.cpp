@@ -18,7 +18,7 @@ void viewColumns(HWND hWnd) {
     ListView_InsertColumn(hWndList, 0, &lvColumn);
 
     lvColumn.pszText = (WCHAR*)L"File Path";
-    lvColumn.cx = 400;
+    lvColumn.cx = 500;
     ListView_InsertColumn(hWndList, 1, &lvColumn);
 
     lvColumn.pszText = (WCHAR*)L"Hash Signature";
@@ -29,7 +29,7 @@ void viewColumns(HWND hWnd) {
     lvColumn.cx = 100;
     ListView_InsertColumn(hWndList, 3, &lvColumn);
 
-    lvColumn.pszText = (WCHAR*)L"Virtualization";
+    lvColumn.pszText = (WCHAR*)L"Visualization";
     lvColumn.cx = 100;
     ListView_InsertColumn(hWndList, 4, &lvColumn);
 
@@ -40,12 +40,19 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 
     Connection connect;
     if (connect.checkInternetConnection()) {
+        //std::string url = "http://10.5.101.199:9000/hash";
         std::string url = "http://srv513883.hstgr.cloud:9000/hash";
         SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
 
+        //int listCount = ListView_GetItemCount(hWndList);
         auto listCount = files->size();
+        int count = 0;
+        int countTrue = 0;
+        //for (int i = 0; i < listCount; i++) {
+            
 
-        auto postHashSignatureBatch = [&connect, url, hWndList, files](size_t startIndex, size_t endIndex) {
+        auto postHashSignatureBatch = [&connect, url, hWnd, hWndList, &files, &count, &countTrue](size_t startIndex, size_t endIndex) {
+
             const auto size = endIndex - startIndex;
 
             std::vector<std::string> hashes(size * 3);
@@ -54,6 +61,9 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
             futures.reserve(size);
 
             for (size_t i = 0; i < size; i++) {
+                count++;
+                SetDlgItemText(hWnd, IDC_SCAN_HASH_COUNT, Convert::IntToWstr(count).c_str());
+
                 futures.push_back(std::async(
                     std::launch::async,
                     [&hashes](std::string path, size_t index) {
@@ -65,9 +75,11 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
                     i
                 ));
             }
+
             for (auto& f : futures) {
                 f.get();
             }
+
             futures.clear();
 
             nlohmann::json json = {
@@ -79,11 +91,13 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
             for (size_t i = 0; i < size; i++) {
                 futures.push_back(std::async(
                     std::launch::async,
-                    [&response, hWndList, startIndex](size_t index) {
+                    [&response, hWnd, hWndList, startIndex, &countTrue](size_t index) {
                         bool found = false;
                         for (size_t i = 0; i < 3; i++) {
                             if (response["response"][index * 3 + i]["is_found"]) {
                                 found = true;
+                                countTrue++;
+                                SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
                                 break;
                             }
                         }
@@ -93,6 +107,7 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
                     i
                 ));
             }
+
             for (auto& f : futures) {
                 f.get();
             }
@@ -142,19 +157,33 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 }
 
 
-void yaraRules(HWND hWnd, HWND hWndList) {
+void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
     int listCount = ListView_GetItemCount(hWndList);
+    int count = 0;
+    int countTrue = 0;
 
-    auto scanYara = [hWndList](int rowIndex) {
+    auto yara = YaraRules();
+    yara.compileRulesRecursive(File::getPathDir() + "\\data\\yru");
+
+    auto scanYara = [&yara, hWnd, hWndList, &files, &count, &countTrue](int rowIndex) {
+        count++;
+        SetDlgItemText(hWnd, IDC_SCAN_YARA_COUNT, Convert::IntToWstr(count).c_str());
         wchar_t filePath[2048];
         ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
 
-        std::string responseYara = YaraRules::scan(file);
-        std::wstring resultHash = Convert::StrToWstr(responseYara);
+        const wchar_t* result;
+        if (yara.scan(files->at(rowIndex).string())) {
+            result = L"yes";
+            countTrue++;
+            SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+        }
+        else {
+            result = L"no";
+        }
 
-        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(resultHash.c_str()));
-        };
+        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(result));
+    };
 
     std::deque<std::future<void>> futures;
     int index = 0;
@@ -184,14 +213,59 @@ void yaraRules(HWND hWnd, HWND hWndList) {
     }
 }
 
+void visualization(HWND hWnd, HWND hWndList) {
+
+    int listCount = ListView_GetItemCount(hWndList);
+    int count = 0;
+    int countTrue = 0;
+    for (int i = 0; i < listCount; i++) {
+
+        count++;
+        SetDlgItemText(hWnd, IDC_SCAN_VIS_COUNT, Convert::IntToWstr(count).c_str());
+        wchar_t filePath[2048];
+        ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
+        std::string file = Convert::WCharToStr(filePath);
+
+        std::filesystem::path path = file;
+        if (File::ignoreFile(path.filename().string())) {
+            continue;
+        }
+
+        std::string visualization = Visualization::scan(file);
+        float visNum = std::stof(visualization);
+
+        const wchar_t* result;
+        if (visNum > 0.5) {
+            countTrue++;
+            SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+            result = L"yes";
+        }
+        else {
+            result = L"no";
+        }
+        
+        ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(result));
+        
+        //if (visualization != "benign") {
+        //    countTrue++;
+        //    SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+        //}
+
+        //std::wstring resultHash = Convert::StrToWstr(visualization);
+
+        //ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(resultHash.c_str()));
+    }
+}
+
 void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::path>> listFile) {
     LVITEM lvItem;
     ZeroMemory(&lvItem, sizeof(LVITEM));
     lvItem.mask = LVIF_TEXT;
 
     HWND hWndList = GetDlgItem(hWnd, IDC_LIST_FILE);
-    //SendMessageA(hWndList, LB_RESETCONTENT, 0, 0);
-    //SendMessageA(hWndList, LB_SETHORIZONTALEXTENT, (WPARAM)1000, 0);
+    ListView_DeleteAllItems(hWndList);
+     //SendMessageA(hWndList, LB_RESETCONTENT, 0, 0);
+     //SendMessageA(hWndList, LB_SETHORIZONTALEXTENT, (WPARAM)1000, 0);
     int i = 0;
     for (const auto& file : *listFile) {
         //std::string filePath = "datetime\t" + file.string() + "\thashsignature\tyararules\tvisualization";
@@ -205,13 +279,16 @@ void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::pat
         i++;
     }
 
-    //yaraRules(hWnd, hWndList);
-    std::thread threadYara(yaraRules, hWnd, hWndList);
-    threadYara.detach();
-
     std::thread threadHashSignature(hashSignature, hWnd, hWndList, listFile);
     threadHashSignature.detach();
 
+    //yaraRules(hWnd, hWndList);
+    std::thread threadYara(yaraRules, hWnd, hWndList, listFile);
+    threadYara.detach();
+
+    //visualization(hWnd, hWndList);
+    std::thread threadVisual(visualization, hWnd, hWndList);
+    threadVisual.detach();
 }
 
 void buttonBrowse(HWND hWnd) {
@@ -273,7 +350,7 @@ LRESULT CALLBACK MainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         viewColumns(hWnd);
         SetDlgItemText(hWnd, IDC_STATIC, L"Ransomware Defender");
-        SetDlgItemText(hWnd, IDC_EDIT_PATH, L"D:\\AMP");
+        SetDlgItemText(hWnd, IDC_EDIT_PATH, L"D:\\AMP\\documents");
         break;
     case WM_COMMAND:
         int wmcID = LOWORD(wParam);

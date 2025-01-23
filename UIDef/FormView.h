@@ -5,7 +5,8 @@
 //#include "Convert.h"
 #include "Time.h"
 #include "Connection.h"
-//#include "File.h"
+#include "File.h"
+#include "Visualization.h"
 #include "YaraRules.h"
 #include <deque>
 #include <future>

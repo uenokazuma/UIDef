@@ -1,9 +1,13 @@
+#pragma once
 #include <windows.h>
 #include <iostream>
+#include <string>
 
 class Convert
 {
 public:
+    static std::wstring IntToWstr(int number);
+    static LPWSTR StrToLPWSTR(std::string& str);
     static std::string WCharToStr(const wchar_t* wstr);
     static char* WCharToChar(const wchar_t* wstr);
     static std::wstring StrToWstr(const std::string wstr);
