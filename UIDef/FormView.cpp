@@ -51,7 +51,7 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
         //for (int i = 0; i < listCount; i++) {
             
 
-        auto postHashSignatureBatch = [&connect, url, hWnd, hWndList, files, &count, &countTrue](size_t startIndex, size_t endIndex) {
+        auto postHashSignatureBatch = [&connect, url, hWnd, hWndList, &files, &count, &countTrue](size_t startIndex, size_t endIndex) {
 
             const auto size = endIndex - startIndex;
 
@@ -157,34 +157,32 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 }
 
 
-void yaraRules(HWND hWnd, HWND hWndList) {
-
+void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
     int listCount = ListView_GetItemCount(hWndList);
     int count = 0;
     int countTrue = 0;
-    //for (int i = 0; i < listCount; i++) {
-    auto scanYara = [hWnd, hWndList, &count, &countTrue](int rowIndex) {
 
+    auto yara = YaraRules();
+    yara.compileRulesRecursive(File::getPathDir() + "\\data\\yru");
+
+    auto scanYara = [&yara, hWnd, hWndList, &files, &count, &countTrue](int rowIndex) {
         count++;
         SetDlgItemText(hWnd, IDC_SCAN_YARA_COUNT, Convert::IntToWstr(count).c_str());
         wchar_t filePath[2048];
         ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
 
-        std::filesystem::path path = file;
-        if (File::ignoreFile(path.filename().string())) {
-            return;
-        }
-
-        std::string responseYara = YaraRules::scan(file);
-        if (responseYara == "yes") {
+        auto result;
+        if (yara.scan(files->at(rowIndex).string()) {
+            result = L"yes";
             countTrue++;
             SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
         }
+        else {
+            result = L"no";
+        }
 
-        std::wstring resultHash = Convert::StrToWstr(responseYara);
-
-        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(resultHash.c_str()));
+        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(result));
         };
 
     std::deque<std::future<void>> futures;
@@ -285,7 +283,7 @@ void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::pat
     threadHashSignature.detach();
 
     //yaraRules(hWnd, hWndList);
-    std::thread threadYara(yaraRules, hWnd, hWndList);
+    std::thread threadYara(yaraRules, hWnd, hWndList, listFile);
     threadYara.detach();
 
     //visualization(hWnd, hWndList);
