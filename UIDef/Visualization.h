@@ -1,10 +1,15 @@
 #pragma once
 #include <iostream>
-#include <sstream>
-#include <cstdio>
-#include <windows.h>
-#include "Convert.h"
+#include <vector>
+#include <fstream>
+#include <algorithm>
+#include <string>
+#include <sys/stat.h>
+#include <chrono>
+#include <mutex>
 #include "File.h"
+
+#include <tensorflow/c/c_api.h>
 
 class Visualization
 {

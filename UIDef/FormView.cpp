@@ -215,22 +215,21 @@ void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesy
     }
 }
 
-void visualization(HWND hWnd, HWND hWndList) {
-
+void visualization(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
     int listCount = ListView_GetItemCount(hWndList);
     int count = 0;
     int countTrue = 0;
-    for (int i = 0; i < listCount; i++) {
-
+    
+    auto scanVisualization = [hWnd, hWndList, &files, &count, &countTrue](int rowIndex) {
         count++;
         SetDlgItemText(hWnd, IDC_SCAN_VIS_COUNT, Convert::IntToWstr(count).c_str());
         wchar_t filePath[2048];
-        ListView_GetItemText(hWndList, i, 1, filePath, sizeof(filePath));
+        ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
         std::string file = Convert::WCharToStr(filePath);
 
         std::filesystem::path path = file;
         if (File::ignoreFile(path.filename().string())) {
-            continue;
+            exit(1);
         }
 
         std::string visualization = Visualization::scan(file);
@@ -245,17 +244,35 @@ void visualization(HWND hWnd, HWND hWndList) {
         else {
             result = L"no";
         }
-        
-        ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(result));
-        
-        //if (visualization != "benign") {
-        //    countTrue++;
-        //    SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
-        //}
 
-        //std::wstring resultHash = Convert::StrToWstr(visualization);
+        ListView_SetItemText(hWndList, rowIndex, 4, const_cast<LPWSTR>(result));
+    };
 
-        //ListView_SetItemText(hWndList, i, 4, const_cast<LPWSTR>(resultHash.c_str()));
+    std::deque<std::future<void>> futures;
+    int index = 0;
+
+    while (index < listCount && futures.size() < MAX_CONCURRENT_TASKS) {
+        futures.push_back(
+            std::async(std::launch::async,
+                scanVisualization,
+                index++
+            )
+        );
+    }
+
+    while(!futures.empty()) {
+        auto& first_future = futures.front();
+        first_future.get();
+        futures.pop_front();
+
+        if (index < listCount) {
+            futures.push_back(
+                std::async(std::launch::async,
+                    scanVisualization,
+                    index++
+                )
+            );
+        }
     }
 }
 
@@ -289,7 +306,7 @@ void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::pat
     threadYara.detach();
 
     //visualization(hWnd, hWndList);
-    std::thread threadVisual(visualization, hWnd, hWndList);
+    std::thread threadVisual(visualization, hWnd, hWndList, listFile);
     threadVisual.detach();
 }
 
