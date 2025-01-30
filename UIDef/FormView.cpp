@@ -21,24 +21,89 @@ void viewColumns(HWND hWnd) {
     lvColumn.cx = 500;
     ListView_InsertColumn(hWndList, 1, &lvColumn);
 
-    lvColumn.pszText = (WCHAR*)L"Hash Signature";
+    lvColumn.pszText = (WCHAR*)L"Result";
     lvColumn.cx = 100;
     ListView_InsertColumn(hWndList, 2, &lvColumn);
 
-    lvColumn.pszText = (WCHAR*)L"Yara Rules";
+    lvColumn.pszText = (WCHAR*)L"Stopped at";
     lvColumn.cx = 100;
     ListView_InsertColumn(hWndList, 3, &lvColumn);
 
-    lvColumn.pszText = (WCHAR*)L"Visualization";
-    lvColumn.cx = 100;
-    ListView_InsertColumn(hWndList, 4, &lvColumn);
-
 }
 
-void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
+int getDlgItemTextAsInt(HWND hWnd, int idDlgItem) {
+
+    int length = GetWindowTextLength(GetDlgItem(hWnd, idDlgItem)) + 1;
+    char* text = new char[length];
+
+    GetDlgItemTextA(hWnd, idDlgItem, text, length);
+    std::string textStr(text);
+
+    delete[] text;
+
+    try {
+        return std::stoi(text);
+    }
+    catch (const std::invalid_argument& e) {
+        return 0;
+    }
+    catch (const std::out_of_range& e) {
+        return 0;
+    }
+}
+
+void visualization(HWND hWnd, HWND hWndList, std::string filepath, size_t rowIndex) {
+
+    std::string visualization = Visualization::scan(filepath);
+    float visNum = std::stof(visualization);
+
+    if (visNum > 0.5) {
+        countTrueVis++;
+        SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrueVis).c_str());
+        ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"yes"));
+        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(L"Visualization"));
+    }
+    else {
+        countTrueBenign++;
+        SetDlgItemText(hWnd, IDC_SCAN_UNDETECTED_TRUE_COUNT, Convert::IntToWstr(countTrueBenign).c_str());
+        ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"no"));
+    }
+}
+
+void yaraRules(YaraRules yara, HWND hWnd, HWND hWndList, std::string filepath, size_t rowIndex) {
+   
+    const wchar_t* result;
+    if (yara.scan(filepath)) {
+        result = L"yes";
+        countTrueYara++;
+        SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrueYara).c_str());
+        ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"yes"));
+        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(L"Yara Rules"));
+    }
+    else {
+        result = L"no";
+        visualization(hWnd, hWndList, filepath, rowIndex);
+    }
+}
+
+void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
     //auto start = std::chrono::high_resolution_clock::now();
 
     Connection connect;
+    auto yara = YaraRules();
+    yara.compileRulesRecursive(File::getPathDir() + "\\data\\yru");
+
+    countTrueHash = 0;
+    countTrueYara = 0;
+    countTrueVis = 0;
+    countTrueBenign = 0;
+
+    SetDlgItemText(hWnd, IDC_SCAN_TOTAL_COUNT, Convert::IntToWstr(0).c_str());
+    SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrueHash).c_str());
+    SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrueYara).c_str());
+    SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrueVis).c_str());
+    SetDlgItemText(hWnd, IDC_SCAN_UNDETECTED_TRUE_COUNT, Convert::IntToWstr(countTrueBenign).c_str());
+
     if (connect.checkInternetConnection()) {
         //std::string url = "http://10.5.101.199:9000/hash";
         std::string url = "http://srv513883.hstgr.cloud:9000/hash";
@@ -47,11 +112,11 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
         //int listCount = ListView_GetItemCount(hWndList);
         auto listCount = files->size();
         int count = 0;
-        int countTrue = 0;
+        //int countTrue = 0;
         //for (int i = 0; i < listCount; i++) {
-            
 
-        auto postHashSignatureBatch = [&connect, url, hWnd, hWndList, &files, &count, &countTrue](size_t startIndex, size_t endIndex) {
+
+        auto postHashSignatureBatch = [&yara, &connect, url, hWnd, hWndList, &files, &count](size_t startIndex, size_t endIndex) {
 
             const auto size = endIndex - startIndex;
 
@@ -62,7 +127,7 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
 
             for (size_t i = 0; i < size; i++) {
                 count++;
-                SetDlgItemText(hWnd, IDC_SCAN_HASH_COUNT, Convert::IntToWstr(count).c_str());
+                SetDlgItemText(hWnd, IDC_SCAN_TOTAL_COUNT, Convert::IntToWstr(count).c_str());
 
                 futures.push_back(std::async(
                     std::launch::async,
@@ -91,20 +156,27 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
             for (size_t i = 0; i < size; i++) {
                 futures.push_back(std::async(
                     std::launch::async,
-                    [&response, hWnd, hWndList, startIndex, &countTrue](size_t index) {
+                    [&yara, &files, &response, hWnd, hWndList, startIndex](size_t index) {
                         bool found = false;
+                        size_t rowIndex = startIndex + index;
                         for (size_t i = 0; i < 3; i++) {
                             bool isFound = response["response"][index * 3 + i]["is_found"];
                             std::string classType = response["response"][index * 3 + i]["class"];
                             if (isFound && (classType == "ransomware" || classType == "malware")) {
                                 found = true;
-                                countTrue++;
-                                SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
+                                countTrueHash++;
+                                SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrueHash).c_str());
                                 break;
                             }
                         }
-                        auto result = found ? L"yes" : L"no";
-                        ListView_SetItemText(hWndList, startIndex + index, 2, const_cast<LPWSTR>(result));
+                        //auto result = found ? L"yes" : L"no";
+                        if (found) {
+                            ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"yes"));
+                            ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(L"Hash Signature"));
+                        }
+                        else {
+                            yaraRules(yara, hWnd, hWndList, files->at(rowIndex).string(), rowIndex);
+                        }
                     },
                     i
                 ));
@@ -113,7 +185,6 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
             for (auto& f : futures) {
                 f.get();
             }
-
             };
 
         std::deque<std::future<void>> futures;
@@ -158,124 +229,6 @@ void hashSignature(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::fi
     //SetDlgItemText(hWnd, IDC_CONNECT, text.c_str());
 }
 
-
-void yaraRules(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
-    int listCount = ListView_GetItemCount(hWndList);
-    int count = 0;
-    int countTrue = 0;
-
-    auto yara = YaraRules();
-    yara.compileRulesRecursive(File::getPathDir() + "\\data\\yru");
-
-    auto scanYara = [&yara, hWnd, hWndList, &files, &count, &countTrue](int rowIndex) {
-        count++;
-        SetDlgItemText(hWnd, IDC_SCAN_YARA_COUNT, Convert::IntToWstr(count).c_str());
-        wchar_t filePath[2048];
-        ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
-        std::string file = Convert::WCharToStr(filePath);
-
-        const wchar_t* result;
-        if (yara.scan(files->at(rowIndex).string())) {
-            result = L"yes";
-            countTrue++;
-            SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
-        }
-        else {
-            result = L"no";
-        }
-
-        ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(result));
-    };
-
-    std::deque<std::future<void>> futures;
-    int index = 0;
-
-    while (index < listCount && futures.size() < MAX_CONCURRENT_TASKS) {
-        futures.push_back(
-            std::async(std::launch::async,
-                scanYara,
-                index++
-            )
-        );
-    }
-
-    while (!futures.empty()) {
-        auto& first_future = futures.front();
-        first_future.get();
-        futures.pop_front();
-
-        if (index < listCount) {
-            futures.push_back(
-                std::async(std::launch::async,
-                    scanYara,
-                    index++
-                )
-            );
-        }
-    }
-}
-
-void visualization(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::filesystem::path>> files) {
-    int listCount = ListView_GetItemCount(hWndList);
-    int count = 0;
-    int countTrue = 0;
-    
-    auto scanVisualization = [hWnd, hWndList, &files, &count, &countTrue](int rowIndex) {
-        count++;
-        SetDlgItemText(hWnd, IDC_SCAN_VIS_COUNT, Convert::IntToWstr(count).c_str());
-        wchar_t filePath[2048];
-        ListView_GetItemText(hWndList, rowIndex, 1, filePath, sizeof(filePath));
-        std::string file = Convert::WCharToStr(filePath);
-
-        std::filesystem::path path = file;
-        if (File::ignoreFile(path.filename().string())) {
-            exit(1);
-        }
-
-        std::string visualization = Visualization::scan(file);
-        float visNum = std::stof(visualization);
-
-        const wchar_t* result;
-        if (visNum > 0.5) {
-            countTrue++;
-            SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrue).c_str());
-            result = L"yes";
-        }
-        else {
-            result = L"no";
-        }
-
-        ListView_SetItemText(hWndList, rowIndex, 4, const_cast<LPWSTR>(result));
-    };
-
-    std::deque<std::future<void>> futures;
-    int index = 0;
-
-    while (index < listCount && futures.size() < MAX_CONCURRENT_TASKS) {
-        futures.push_back(
-            std::async(std::launch::async,
-                scanVisualization,
-                index++
-            )
-        );
-    }
-
-    while(!futures.empty()) {
-        auto& first_future = futures.front();
-        first_future.get();
-        futures.pop_front();
-
-        if (index < listCount) {
-            futures.push_back(
-                std::async(std::launch::async,
-                    scanVisualization,
-                    index++
-                )
-            );
-        }
-    }
-}
-
 void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::path>> listFile) {
     LVITEM lvItem;
     ZeroMemory(&lvItem, sizeof(LVITEM));
@@ -298,16 +251,9 @@ void listScannedFile(HWND hWnd, std::shared_ptr<std::vector<std::filesystem::pat
         i++;
     }
 
-    std::thread threadHashSignature(hashSignature, hWnd, hWndList, listFile);
-    threadHashSignature.detach();
-
-    //yaraRules(hWnd, hWndList);
-    std::thread threadYara(yaraRules, hWnd, hWndList, listFile);
-    threadYara.detach();
-
-    //visualization(hWnd, hWndList);
-    std::thread threadVisual(visualization, hWnd, hWndList, listFile);
-    threadVisual.detach();
+    scanSerial(hWnd, hWndList, listFile);
+    //std::thread threadScanSerial(scanSerial, hWnd, hWndList, listFile);
+    //threadScanSerial.detach();
 }
 
 void buttonBrowse(HWND hWnd) {
@@ -329,13 +275,7 @@ void buttonBrowse(HWND hWnd) {
 }
 
 void buttonScan(HWND hWnd) {
-    //Connection connect;
-    //if (connect.checkInternetConnection()) {
-    //    SetDlgItemText(hWnd, IDC_STATIC, L"connected");
-    //}
-    //else {
-    //    SetDlgItemText(hWnd, IDC_STATIC, L"not connected");
-    //}
+
     HWND hWndEditPath = GetDlgItem(hWnd, IDC_EDIT_PATH);
     int hWndEditPathLength = GetWindowTextLength(hWndEditPath) + 1;
 
@@ -358,29 +298,59 @@ LRESULT CALLBACK MainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     Connection connect;
 
     switch (message) {
-    case WM_INITDIALOG:
-        if (connect.checkInternetConnection()) {
-            std::string url = "http://srv513883.hstgr.cloud:9000/hash";
-            SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
-        }
-        else {
-            SetDlgItemText(hWnd, IDC_CONNECT, L"not connected");
-        }
+        /*case WM_NOTIFY: {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
 
-        viewColumns(hWnd);
-        SetDlgItemText(hWnd, IDC_STATIC, L"Ransomware Defender");
-        SetDlgItemText(hWnd, IDC_EDIT_PATH, L"D:\\AMP\\documents");
-        break;
-    case WM_COMMAND:
-        int wmcID = LOWORD(wParam);
-        switch (wmcID) {
-        case IDC_BTN_BROWSE:
-            buttonBrowse(hWnd);
+            if (pnmh->idFrom == IDC_LIST_FILE && pnmh->code == NM_CUSTOMDRAW) {
+                LPNMLVCUSTOMDRAW pLvcd = (LPNMLVCUSTOMDRAW)lParam;
+
+                switch (pLvcd->nmcd.dwDrawStage) {
+                    case CDDS_ITEMPREPAINT: {
+                        wchar_t text[5];
+                        int row = pLvcd->nmcd.dwItemSpec;
+                        HWND hWndList = GetDlgItem(hWnd, IDC_LIST_FILE);
+                        ListView_GetItemText(hWndList, row, 2, text, 5);
+
+                        if (wcscmp(text, L"yes") == 0) {
+                            pLvcd->clrTextBk = RGB(255, 0, 0);
+                        }
+                        else if (wcscmp(text, L"no") == 0) {
+                            pLvcd->clrTextBk = RGB(0, 255, 0);
+                        }
+                        break;
+                    }
+                        return CDRF_DODEFAULT;
+                        break;
+                    case CDDS_ITEMPOSTPAINT:
+                        break;
+                }
+            }
             break;
-        case IDC_BTN_SCAN:
-            buttonScan(hWnd);
+        }*/
+        case WM_INITDIALOG:
+            if (connect.checkInternetConnection()) {
+                std::string url = "http://srv513883.hstgr.cloud:9000/hash";
+                SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
+            }
+            else {
+                SetDlgItemText(hWnd, IDC_CONNECT, L"not connected");
+            }
+
+            viewColumns(hWnd);
+            SetDlgItemText(hWnd, IDC_STATIC, L"Ransomware Defender");
+            SetDlgItemText(hWnd, IDC_EDIT_PATH, L"D:\\AMP\\documents");
             break;
-        }
+        case WM_COMMAND:
+            int wmcID = LOWORD(wParam);
+            switch (wmcID) {
+                case IDC_BTN_BROWSE:
+                    buttonBrowse(hWnd);
+                    break;
+                case IDC_BTN_SCAN:
+                    buttonScan(hWnd);
+                    break;
+            }
+            break;
     }
 
     return 0;

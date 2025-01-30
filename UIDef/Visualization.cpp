@@ -30,7 +30,7 @@ public:
     }
 
     ~TensorPool() {
-        for (auto* t : pool) TF_DeleteTensor(t);
+        //for (auto* t : pool) TF_DeleteTensor(t);
     }
 private:
     TF_Tensor* create_new(size_t batch_size) {

@@ -8,10 +8,10 @@ YaraRules::YaraRules() {
 }
 
 YaraRules::~YaraRules() {
-    if (rules != nullptr) {
-        yr_rules_destroy(rules);
-    }
-    yr_finalize();
+    //if (rules != nullptr) {
+    //    yr_rules_destroy(rules);
+    //}
+    //yr_finalize();
 }
 
 void YaraRules::compileRulesRecursive(const std::string& folder) {

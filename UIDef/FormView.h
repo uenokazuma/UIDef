@@ -16,9 +16,15 @@
 #define MAX_CONCURRENT_TASKS 30
 #define BATCH_SIZE 200
 
+inline int countTrueHash = 0;
+inline int countTrueYara = 0;
+inline int countTrueVis = 0;
+inline int countTrueBenign = 0;
+
 class FormView
 {
 public:
     static void show(HINSTANCE, HWND);
+//private:
 };
 
