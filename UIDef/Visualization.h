@@ -9,12 +9,29 @@
 #include <mutex>
 #include "File.h"
 
+#include <opencv2/opencv.hpp>
 #include <tensorflow/c/c_api.h>
+
+class TFModel {
+    TF_Session* session;
+    TF_Graph* graph;
+    TF_Status* status;
+    TF_Output input_op;
+    TF_Output output_op;
+    int input_height, input_width;
+
+public:
+    TFModel(const char* model_dir);
+    ~TFModel();
+
+    float predict(const cv::Mat& image);
+    //std::vector<float> predict_batch(const std::vector<std::vector<float>>& batch);
+};
 
 class Visualization
 {
 public:
-    static std::string scan(const std::string& filename);
+    static std::string scan(const std::string& filename, TFModel model);
 
 private:
     //static cppflow::model model;

@@ -52,37 +52,34 @@ int getDlgItemTextAsInt(HWND hWnd, int idDlgItem) {
     }
 }
 
-void visualization(HWND hWnd, HWND hWndList, std::string filepath, size_t rowIndex) {
+void visualization(HWND hWnd, HWND hWndList, std::string filepath, size_t rowIndex, TFModel model) {
 
-    std::string visualization = Visualization::scan(filepath);
+    std::string visualization = Visualization::scan(filepath, model);
     float visNum = std::stof(visualization);
 
     if (visNum > 0.5) {
         countTrueVis++;
-        SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrueVis).c_str());
         ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"yes"));
         ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(L"Visualization"));
     }
     else {
         countTrueBenign++;
-        SetDlgItemText(hWnd, IDC_SCAN_UNDETECTED_TRUE_COUNT, Convert::IntToWstr(countTrueBenign).c_str());
         ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"no"));
     }
 }
 
-void yaraRules(YaraRules yara, HWND hWnd, HWND hWndList, std::string filepath, size_t rowIndex) {
+void yaraRules(YaraRules yara, HWND hWnd, HWND hWndList, std::string filepath, size_t rowIndex, TFModel model) {
    
     const wchar_t* result;
     if (yara.scan(filepath)) {
         result = L"yes";
         countTrueYara++;
-        SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrueYara).c_str());
         ListView_SetItemText(hWndList, rowIndex, 2, const_cast<LPWSTR>(L"yes"));
         ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(L"Yara Rules"));
     }
     else {
         result = L"no";
-        visualization(hWnd, hWndList, filepath, rowIndex);
+        visualization(hWnd, hWndList, filepath, rowIndex, model);
     }
 }
 
@@ -92,6 +89,11 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
     Connection connect;
     auto yara = YaraRules();
     yara.compileRulesRecursive(File::getPathDir() + "\\data\\yru");
+
+    std::string pathModel = File::getPathDir() + "\\data\\vism\\seq_binary_model";
+    const char* argModel = pathModel.c_str();
+
+    TFModel model(argModel);
 
     countTrueHash = 0;
     countTrueYara = 0;
@@ -110,13 +112,13 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
         SetDlgItemText(hWnd, IDC_CONNECT, L"connected");
 
         //int listCount = ListView_GetItemCount(hWndList);
-        auto listCount = files->size();
-        int count = 0;
+        int listCount = files->size();
+        std::atomic<int> count = 0;
         //int countTrue = 0;
         //for (int i = 0; i < listCount; i++) {
 
 
-        auto postHashSignatureBatch = [&yara, &connect, url, hWnd, hWndList, &files, &count](size_t startIndex, size_t endIndex) {
+        auto postHashSignatureBatch = [&yara, &model, &connect, url, hWnd, hWndList, &files, &count](size_t startIndex, size_t endIndex) {
 
             const auto size = endIndex - startIndex;
 
@@ -127,7 +129,6 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
 
             for (size_t i = 0; i < size; i++) {
                 count++;
-                SetDlgItemText(hWnd, IDC_SCAN_TOTAL_COUNT, Convert::IntToWstr(count).c_str());
 
                 futures.push_back(std::async(
                     std::launch::async,
@@ -156,7 +157,7 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
             for (size_t i = 0; i < size; i++) {
                 futures.push_back(std::async(
                     std::launch::async,
-                    [&yara, &files, &response, hWnd, hWndList, startIndex](size_t index) {
+                    [&yara, &model, &files, &response, hWnd, hWndList, startIndex](size_t index) {
                         bool found = false;
                         size_t rowIndex = startIndex + index;
                         for (size_t i = 0; i < 3; i++) {
@@ -165,7 +166,6 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
                             if (isFound && (classType == "ransomware" || classType == "malware")) {
                                 found = true;
                                 countTrueHash++;
-                                SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrueHash).c_str());
                                 break;
                             }
                         }
@@ -175,7 +175,7 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
                             ListView_SetItemText(hWndList, rowIndex, 3, const_cast<LPWSTR>(L"Hash Signature"));
                         }
                         else {
-                            yaraRules(yara, hWnd, hWndList, files->at(rowIndex).string(), rowIndex);
+                            yaraRules(yara, hWnd, hWndList, files->at(rowIndex).string(), rowIndex, model);
                         }
                     },
                     i
@@ -195,7 +195,7 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
                 std::async(std::launch::async,
                     postHashSignatureBatch,
                     index,
-                    min(listCount, index + BATCH_SIZE)
+                    std::min(listCount, index + BATCH_SIZE)
                 )
             );
             index += BATCH_SIZE;
@@ -204,6 +204,13 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
         while (!futures.empty()) {
             auto& first_future = futures.front();
             first_future.get();
+            
+            SetDlgItemText(hWnd, IDC_SCAN_TOTAL_COUNT, Convert::IntToWstr(count).c_str());
+            SetDlgItemText(hWnd, IDC_SCAN_HASH_TRUE_COUNT, Convert::IntToWstr(countTrueHash).c_str());
+            SetDlgItemText(hWnd, IDC_SCAN_YARA_TRUE_COUNT, Convert::IntToWstr(countTrueYara).c_str());
+            SetDlgItemText(hWnd, IDC_SCAN_VIS_TRUE_COUNT, Convert::IntToWstr(countTrueVis).c_str());
+            SetDlgItemText(hWnd, IDC_SCAN_UNDETECTED_TRUE_COUNT, Convert::IntToWstr(countTrueBenign).c_str());
+
             futures.pop_front();
 
             if (index < listCount) {
@@ -211,7 +218,7 @@ void scanSerial(HWND hWnd, HWND hWndList, std::shared_ptr<std::vector<std::files
                     std::async(std::launch::async,
                         postHashSignatureBatch,
                         index,
-                        min(listCount, index + BATCH_SIZE)
+                        std::min(listCount, index + BATCH_SIZE)
                     )
                 );
                 index += BATCH_SIZE;

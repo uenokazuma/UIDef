@@ -19,5 +19,6 @@ public:
     static bool createDir(const std::string& path);
     static bool ignoreFile(const std::string& filename);
     static void scan(const std::filesystem::path& path, std::vector<std::filesystem::path>& file);
+    static std::string getFileName(const std::string& filepath);
     static std::string hash(const std::string& fileName, File::HashType type);
 };

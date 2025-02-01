@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>D:\AMP\additional\libtensorflow\include;$(SolutionDir)\External Libraries\yara-4.4.0\include;$(SolutionDir)\External Libraries\openssl\include;$(SolutionDir)\External Libraries\nlohmann-json\include;$(SolutionDir)\External Libraries\curl-8.11.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\AMP\additional\libtensorflow\lib;$(SolutionDir)\External Libraries\yara-4.4.0\lib;$(SolutionDir)\External Libraries\openssl\lib;$(SolutionDir)\External Libraries\curl-8.11.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\AMP\additional\libtensorflow\include;$(SolutionDir)\External Libraries\yara-4.4.0\include;$(SolutionDir)\External Libraries\openssl\include;$(SolutionDir)\External Libraries\nlohmann-json\include;$(SolutionDir)\External Libraries\curl-8.11.1\include;D:\AMP\Projects\UIDef_back\External Libraries\opencv4_x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\AMP\additional\libtensorflow\lib;$(SolutionDir)\External Libraries\yara-4.4.0\lib;$(SolutionDir)\External Libraries\openssl\lib;$(SolutionDir)\External Libraries\curl-8.11.1\lib;D:\AMP\Projects\UIDef_back\External Libraries\opencv4_x64-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>D:\AMP\additional\libtensorflow\include;$(SolutionDir)\External Libraries\yara-4.4.0\include;$(SolutionDir)\External Libraries\openssl\include;$(SolutionDir)\External Libraries\nlohmann-json\include;$(SolutionDir)\External Libraries\curl-8.11.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\AMP\additional\libtensorflow\lib;$(SolutionDir)\External Libraries\yara-4.4.0\lib;$(SolutionDir)\External Libraries\openssl\lib;$(SolutionDir)\External Libraries\curl-8.11.1\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\AMP\additional\libtensorflow\include;$(SolutionDir)\External Libraries\yara-4.4.0\include;$(SolutionDir)\External Libraries\openssl\include;$(SolutionDir)\External Libraries\nlohmann-json\include;$(SolutionDir)\External Libraries\curl-8.11.1\include;D:\AMP\Projects\UIDef_back\External Libraries\opencv4_x64-windows\include\opencv4;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\AMP\additional\libtensorflow\lib;$(SolutionDir)\External Libraries\yara-4.4.0\lib;$(SolutionDir)\External Libraries\openssl\lib;$(SolutionDir)\External Libraries\curl-8.11.1\lib;D:\AMP\Projects\UIDef_back\External Libraries\opencv4_x64-windows\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

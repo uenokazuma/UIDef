@@ -166,6 +166,14 @@ void File::scan(const std::filesystem::path& path, std::vector<std::filesystem::
     }
 }
 
+std::string File::getFileName(const std::string& filepath) {
+
+    std::filesystem::path filePath(filepath);
+    std::string filename = filePath.filename().string();
+
+    return filename;
+}
+
 std::string File::hash(const std::string& fileName, File::HashType type) {
     
     std::ifstream file(fileName, std::ios::binary);
